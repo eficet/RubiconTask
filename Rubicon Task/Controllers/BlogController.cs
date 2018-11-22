@@ -17,28 +17,54 @@ namespace Rubicon_Task.Controllers
         private BlogDb db = new BlogDb();
         private CheckSlug helper = new CheckSlug();
 
-        public IHttpActionResult GetBlogs()
+        public IHttpActionResult GetBlogs(string tag = "all")
         {
             try
             {
-                // create an anonymous type that allows me to choose the desired coulumns
-                var myBlogs = db.blogs.Select(s => new
-                {
-                    slug = s.slug,
-                    title = s.title,
-                    discription = s.description,
-                    budy = s.body,
-                    tagLists = s.tagList.Select(t => t.tagName),
-                    createdAt = s.createdAt,
-                    updatedAt = s.updatedAt
-
-                }).ToList();
-
                 //get the nubmer of blogs in my DB
                 var count = db.blogs.Count();
                 //create List on anonymous object to hold my blogs and the count int
                 var obj = new List<object>();
-                obj.Add(new { blogPosts = myBlogs, postsCount = count });
+
+                if (tag == "all")
+                {
+                    // create an anonymous type that allows me to choose the desired coulumns
+                    var myBlogs = db.blogs.Select(s => new
+                    {
+                        slug = s.slug,
+                        title = s.title,
+                        discription = s.description,
+                        budy = s.body,
+                        tagLists = s.tagList.Select(t => t.tagName),
+                        createdAt = s.createdAt,
+                        updatedAt = s.updatedAt
+
+                    }).OrderByDescending(t => t.createdAt);
+                    obj.Add(new { blogPosts = myBlogs, postsCount = count });
+                }
+                else
+                {
+                    // searches for the blogs with the tagname of tag's value
+                    var x = db.blogs.Include(b => b.tagList.Where(t => t.tagName.ToLower() == tag.ToLower()));
+
+                    // save the retrieved data in this annonymous selection
+                    var myBlogs = x.Select(s => new
+                    {
+                        slug = s.slug,
+                        title = s.title,
+                        discription = s.description,
+                        budy = s.body,
+                        tagLists = s.tagList.Select(t => t.tagName),
+                        createdAt = s.createdAt,
+                        updatedAt = s.updatedAt
+
+                    }).OrderByDescending(t => t.createdAt);
+                    obj.Add(new { blogPosts = myBlogs, postsCount = count });
+
+
+                }
+
+
 
                 return Ok(obj);
             }
