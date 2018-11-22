@@ -40,12 +40,18 @@ namespace Rubicon_Task.Controllers
                         updatedAt = s.updatedAt
 
                     }).OrderByDescending(t => t.createdAt);
+
                     obj.Add(new { blogPosts = myBlogs, postsCount = count });
                 }
                 else
                 {
                     // searches for the blogs with the tagname of tag's value
-                    var x = db.blogs.Include(b => b.tagList.Where(t => t.tagName.ToLower() == tag.ToLower()));
+                    var x = from b in db.blogs
+                            from t in b.tagList
+                            where t.tagName.ToLower() == tag
+                            select b;
+                    
+                   
 
                     // save the retrieved data in this annonymous selection
                     var myBlogs = x.Select(s => new
@@ -59,7 +65,7 @@ namespace Rubicon_Task.Controllers
                         updatedAt = s.updatedAt
 
                     }).OrderByDescending(t => t.createdAt);
-                    obj.Add(new { blogPosts = myBlogs, postsCount = count });
+                    obj.Add(new { blogPosts = myBlogs, postsCount = x.Count() });
 
 
                 }
